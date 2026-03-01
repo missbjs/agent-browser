@@ -868,10 +868,12 @@ export interface CloseCommand extends BaseCommand {
 export interface TabNewCommand extends BaseCommand {
   action: 'tab_new';
   url?: string;
+  windowIndex?: number;
 }
 
 export interface TabListCommand extends BaseCommand {
   action: 'tab_list';
+  windowIndex?: number;
 }
 
 export interface TabSwitchCommand extends BaseCommand {
@@ -887,6 +889,10 @@ export interface TabCloseCommand extends BaseCommand {
 export interface WindowNewCommand extends BaseCommand {
   action: 'window_new';
   viewport?: { width: number; height: number } | null;
+}
+
+export interface WindowListCommand extends BaseCommand {
+  action: 'window_list';
 }
 
 // Union of all command types
@@ -923,6 +929,7 @@ export type Command =
   | TabSwitchCommand
   | TabCloseCommand
   | WindowNewCommand
+  | WindowListCommand
   | CookiesGetCommand
   | CookiesSetCommand
   | CookiesClearCommand
@@ -1185,6 +1192,19 @@ export interface TabInfo {
 
 export interface TabListData {
   tabs: TabInfo[];
+  active: number;
+  windowIndex?: number;
+}
+
+export interface WindowInfo {
+  index: number;
+  tabCount: number;
+  active: boolean;
+  pages: { index: number; url: string; title: string }[];
+}
+
+export interface WindowListData {
+  windows: WindowInfo[];
   active: number;
 }
 

@@ -51,7 +51,7 @@ agent-browser install  # Download Chromium
 ### From Source
 
 ```bash
-git clone https://github.com/vercel-labs/agent-browser
+git clone https://github.com/missbjs/agent-browser
 cd agent-browser
 pnpm install
 pnpm build

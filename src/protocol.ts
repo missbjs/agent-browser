@@ -849,10 +849,16 @@ const closeSchema = baseCommandSchema.extend({
 const tabNewSchema = baseCommandSchema.extend({
   action: z.literal('tab_new'),
   url: z.string().min(1).optional(),
+  windowIndex: z.number().optional(),
 });
 
 const tabListSchema = baseCommandSchema.extend({
   action: z.literal('tab_list'),
+  windowIndex: z.number().nonnegative().optional(),
+});
+
+const windowListSchema = baseCommandSchema.extend({
+  action: z.literal('window_list'),
 });
 
 const tabSwitchSchema = baseCommandSchema.extend({
@@ -957,6 +963,7 @@ const commandSchema = z.discriminatedUnion('action', [
   tabSwitchSchema,
   tabCloseSchema,
   windowNewSchema,
+  windowListSchema,
   cookiesGetSchema,
   cookiesSetSchema,
   cookiesClearSchema,

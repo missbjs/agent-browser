@@ -1322,17 +1322,16 @@ export class BrowserManager {
     const launcher =
       browserType === 'firefox' ? firefox : browserType === 'webkit' ? webkit : chromium;
 
-    // Build base args array with file access flags if enabled
+    // Build base args array with file access and stealth flags
     // --allow-file-access-from-files: allows file:// URLs to read other file:// URLs via XHR/fetch
     // --allow-file-access: allows the browser to access local files in general
-    const fileAccessArgs = options.allowFileAccess
-      ? ['--allow-file-access-from-files', '--allow-file-access']
-      : [];
-    const baseArgs = options.args
-      ? [...fileAccessArgs, ...options.args]
-      : fileAccessArgs.length > 0
-        ? fileAccessArgs
-        : undefined;
+    // --disable-blink-features=AutomationControlled: hides automation signals to bypass security checks
+    const defaultArgs = [
+      ...(options.allowFileAccess ? ['--allow-file-access-from-files', '--allow-file-access'] : []),
+      '--disable-blink-features=AutomationControlled',
+    ];
+
+    const baseArgs = options.args ? [...defaultArgs, ...options.args] : defaultArgs;
 
     // Auto-detect args that control window size and disable viewport emulation
     // so Playwright doesn't override the browser's own sizing behavior
@@ -1777,15 +1776,18 @@ export class BrowserManager {
   /**
    * Create a new tab in the current context
    */
-  async newTab(): Promise<{ index: number; total: number }> {
-    if (!this.browser || this.contexts.length === 0) {
+  async newTab(windowIndex?: number): Promise<{ index: number; total: number }> {
+    if (!this.isLaunched() || this.contexts.length === 0) {
       throw new Error('Browser not launched');
     }
 
     // Invalidate CDP session since we're switching to a new page
     await this.invalidateCDPSession();
 
-    const context = this.contexts[0]; // Use first context for tabs
+    const context =
+      windowIndex !== undefined && this.contexts[windowIndex]
+        ? this.contexts[windowIndex]
+        : this.contexts[0];
     const page = await context.newPage();
     // Only add if not already tracked (setupContextTracking may have already added it via 'page' event)
     if (!this.pages.includes(page)) {
@@ -1805,6 +1807,11 @@ export class BrowserManager {
     total: number;
   }> {
     if (!this.browser) {
+      if (this.isPersistentContext) {
+        throw new Error(
+          'Cannot create new window (context) in persistent profile mode. Use newTab instead.'
+        );
+      }
       throw new Error('Browser not launched');
     }
 
@@ -1902,11 +1909,21 @@ export class BrowserManager {
   }
 
   /**
-   * List all tabs with their info
+   * List all tabs with their info, optionally filtering by window index
    */
-  async listTabs(): Promise<Array<{ index: number; url: string; title: string; active: boolean }>> {
+  async listTabs(
+    windowIndex?: number
+  ): Promise<Array<{ index: number; url: string; title: string; active: boolean }>> {
+    let filteredPages = this.pages.map((page, index) => ({ page, index }));
+
+    if (windowIndex !== undefined && windowIndex >= 0 && windowIndex < this.contexts.length) {
+      const context = this.contexts[windowIndex];
+      const contextPages = context.pages();
+      filteredPages = filteredPages.filter(({ page }) => contextPages.includes(page));
+    }
+
     const tabs = await Promise.all(
-      this.pages.map(async (page, index) => ({
+      filteredPages.map(async ({ page, index }) => ({
         index,
         url: page.url(),
         title: await page.title().catch(() => ''),
@@ -1914,6 +1931,44 @@ export class BrowserManager {
       }))
     );
     return tabs;
+  }
+
+  /**
+   * List all windows (contexts) and their tabs
+   */
+  async listWindows(): Promise<
+    Array<{
+      index: number;
+      tabCount: number;
+      active: boolean;
+      pages: { index: number; url: string; title: string }[];
+    }>
+  > {
+    const activePage = this.getPage();
+    const activeContext = activePage.context();
+
+    return await Promise.all(
+      this.contexts.map(async (context, index) => {
+        const contextPages = context.pages();
+        const pageInfos = await Promise.all(
+          contextPages.map(async (p) => {
+            const pageIdx = this.pages.indexOf(p);
+            return {
+              index: pageIdx,
+              url: p.url(),
+              title: await p.title().catch(() => ''),
+            };
+          })
+        );
+
+        return {
+          index,
+          tabCount: contextPages.length,
+          active: context === activeContext,
+          pages: pageInfos,
+        };
+      })
+    );
   }
 
   /**

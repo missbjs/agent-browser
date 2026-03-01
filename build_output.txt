@@ -1,0 +1,49 @@
+
+> agent-browser@0.15.1 build D:\Developments\tslib\agent-ai\packages\agent-browser
+> tsc
+
+src/actions.ts(3,34): error TS2307: Cannot find module 'playwright-core' or its corresponding type declarations.
+src/actions.ts(642,47): error TS7006: Parameter 'el' implicitly has an 'any' type.
+src/actions.ts(730,5): error TS18046: 'options' is of type 'unknown'.
+src/actions.ts(890,31): error TS2698: Spread types may only be created from object types.
+src/actions.ts(1006,10): error TS7006: Parameter 'el' implicitly has an 'any' type.
+src/actions.ts(1006,16): error TS7031: Binding element 'x' implicitly has an 'any' type.
+src/actions.ts(1006,19): error TS7031: Binding element 'y' implicitly has an 'any' type.
+src/actions.ts(1659,46): error TS7006: Parameter 'el' implicitly has an 'any' type.
+src/actions.ts(1659,50): error TS7006: Parameter 'script' implicitly has an 'any' type.
+src/actions.ts(1669,6): error TS7006: Parameter 'els' implicitly has an 'any' type.
+src/actions.ts(1669,11): error TS7006: Parameter 'script' implicitly has an 'any' type.
+src/actions.ts(1671,23): error TS7006: Parameter 'el' implicitly has an 'any' type.
+src/actions.ts(2465,48): error TS7006: Parameter 'resp' implicitly has an 'any' type.
+src/browser.ts(16,8): error TS2307: Cannot find module 'playwright-core' or its corresponding type declarations.
+src/browser.ts(625,25): error TS7006: Parameter 'msg' implicitly has an 'any' type.
+src/browser.ts(653,27): error TS7006: Parameter 'error' implicitly has an 'any' type.
+src/browser.ts(847,29): error TS7006: Parameter 'context' implicitly has an 'any' type.
+src/browser.ts(1544,42): error TS7006: Parameter 'context' implicitly has an 'any' type.
+src/browser.ts(1544,79): error TS7006: Parameter 'page' implicitly has an 'any' type.
+src/browser.ts(1726,25): error TS7006: Parameter 'msg' implicitly has an 'any' type.
+src/browser.ts(1734,27): error TS7006: Parameter 'error' implicitly has an 'any' type.
+src/browser.ts(1757,25): error TS7006: Parameter 'page' implicitly has an 'any' type.
+src/diff.ts(1,37): error TS2307: Cannot find module 'playwright-core' or its corresponding type declarations.
+src/diff.ts(198,37): error TS7006: Parameter 'route' implicitly has an 'any' type.
+src/diff.ts(202,40): error TS7006: Parameter 'route' implicitly has an 'any' type.
+src/diff.ts(206,39): error TS7006: Parameter 'route' implicitly has an 'any' type.
+src/domain-filter.ts(1,44): error TS2307: Cannot find module 'playwright-core' or its corresponding type declarations.
+src/ios-manager.ts(11,24): error TS2307: Cannot find module 'node-simctl' or its corresponding type declarations.
+src/ios-manager.ts(12,53): error TS2307: Cannot find module 'webdriverio' or its corresponding type declarations.
+src/protocol.ts(38,14): error TS2554: Expected 2-3 arguments, but got 1.
+src/protocol.ts(65,14): error TS2554: Expected 2-3 arguments, but got 1.
+src/protocol.ts(232,18): error TS2554: Expected 2-3 arguments, but got 1.
+src/protocol.ts(513,16): error TS2554: Expected 2-3 arguments, but got 1.
+src/protocol.ts(553,14): error TS2554: Expected 2-3 arguments, but got 1.
+src/protocol.ts(1099,33): error TS2339: Property 'errors' does not exist on type 'ZodError<{ id: string; action: "launch"; headless?: boolean | undefined; viewport?: { width: number; height: number; } | null | undefined; browser?: "chromium" | "firefox" | "webkit" | undefined; ... 18 more ...; confirmActions?: string[] | undefined; } | ... 140 more ... | { ...; }>'.
+src/protocol.ts(1099,45): error TS7006: Parameter 'e' implicitly has an 'any' type.
+src/snapshot.ts(20,36): error TS2307: Cannot find module 'playwright-core' or its corresponding type declarations.
+src/stream-server.ts(1,44): error TS2307: Cannot find module 'ws' or its corresponding type declarations.
+src/stream-server.ts(139,36): error TS7006: Parameter 'ws' implicitly has an 'any' type.
+src/stream-server.ts(143,31): error TS7006: Parameter 'error' implicitly has an 'any' type.
+src/stream-server.ts(212,23): error TS7006: Parameter 'data' implicitly has an 'any' type.
+src/stream-server.ts(234,21): error TS7006: Parameter 'error' implicitly has an 'any' type.
+src/types.ts(1,52): error TS2307: Cannot find module 'playwright-core' or its corresponding type declarations.
+ ELIFECYCLE  Command failed with exit code 2.
+ WARN   Local package.json exists, but node_modules missing, did you mean to install?

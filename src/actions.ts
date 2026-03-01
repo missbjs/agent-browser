@@ -50,9 +50,11 @@ import type {
   HoverCommand,
   ContentCommand,
   TabNewCommand,
+  TabListCommand,
   TabSwitchCommand,
   TabCloseCommand,
   WindowNewCommand,
+  WindowListCommand,
   CookiesSetCommand,
   StorageGetCommand,
   StorageSetCommand,
@@ -148,10 +150,13 @@ import type {
   DiffScreenshotData,
   DiffUrlData,
   ContentData,
+  TabInfo,
   TabListData,
   TabNewData,
   TabSwitchData,
   TabCloseData,
+  WindowInfo,
+  WindowListData,
   ScreencastStartData,
   ScreencastStopData,
   RecordingStartData,
@@ -389,6 +394,8 @@ async function dispatchAction(command: Command, browser: BrowserManager): Promis
       return await handleTabClose(command, browser);
     case 'window_new':
       return await handleWindowNew(command, browser);
+    case 'window_list':
+      return await handleWindowList(command, browser);
     case 'cookies_get':
       return await handleCookiesGet(command, browser);
     case 'cookies_set':
@@ -1068,7 +1075,7 @@ async function handleTabNew(
   command: TabNewCommand,
   browser: BrowserManager
 ): Promise<Response<TabNewData>> {
-  const result = await browser.newTab();
+  const result = await browser.newTab(command.windowIndex);
 
   // Navigate to URL if provided (same pattern as handleNavigate)
   if (command.url) {
@@ -1080,13 +1087,14 @@ async function handleTabNew(
 }
 
 async function handleTabList(
-  command: Command & { action: 'tab_list' },
+  command: TabListCommand,
   browser: BrowserManager
 ): Promise<Response<TabListData>> {
-  const tabs = await browser.listTabs();
+  const tabs = await browser.listTabs(command.windowIndex);
   return successResponse(command.id, {
     tabs,
     active: browser.getActiveIndex(),
+    windowIndex: command.windowIndex,
   });
 }
 
@@ -1116,6 +1124,25 @@ async function handleWindowNew(
 ): Promise<Response<TabNewData>> {
   const result = await browser.newWindow(command.viewport);
   return successResponse(command.id, result);
+}
+
+async function handleWindowList(
+  command: WindowListCommand,
+  browser: BrowserManager
+): Promise<Response<WindowListData>> {
+  const windows = await browser.listWindows();
+  let activeIndex = -1;
+  for (let i = 0; i < windows.length; i++) {
+    if (windows[i].active) {
+      activeIndex = i;
+      break;
+    }
+  }
+
+  return successResponse(command.id, {
+    windows,
+    active: activeIndex,
+  });
 }
 
 // New handlers for enhanced Playwright parity

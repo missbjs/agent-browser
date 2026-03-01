@@ -880,7 +880,17 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                 }
                 Ok(cmd)
             }
-            Some("list") => Ok(json!({ "id": id, "action": "tab_list" })),
+            Some("list") => {
+                let mut cmd = json!({ "id": id, "action": "tab_list" });
+                if let Some(idx) = rest.iter().position(|s| *s == "--window") {
+                    if let Some(val) = rest.get(idx + 1) {
+                        if let Ok(w_idx) = val.parse::<i32>() {
+                            cmd["windowIndex"] = json!(w_idx);
+                        }
+                    }
+                }
+                Ok(cmd)
+            }
             Some("close") => {
                 let mut cmd = json!({ "id": id, "action": "tab_close" });
                 if let Some(index) = rest.get(1).and_then(|s| s.parse::<i32>().ok()) {
@@ -897,16 +907,17 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
 
         // === Window ===
         "window" => {
-            const VALID: &[&str] = &["new"];
+            const VALID: &[&str] = &["new", "list"];
             match rest.first().copied() {
                 Some("new") => Ok(json!({ "id": id, "action": "window_new" })),
+                Some("list") => Ok(json!({ "id": id, "action": "window_list" })),
                 Some(sub) => Err(ParseError::UnknownSubcommand {
                     subcommand: sub.to_string(),
                     valid_options: VALID,
                 }),
                 None => Err(ParseError::MissingArguments {
                     context: "window".to_string(),
-                    usage: "window <new>",
+                    usage: "window <new|list>",
                 }),
             }
         }
