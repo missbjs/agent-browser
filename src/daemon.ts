@@ -6,7 +6,7 @@ import * as os from 'os';
 import { BrowserManager } from './browser.js';
 import { IOSManager } from './ios-manager.js';
 import { parseCommand, serializeResponse, errorResponse } from './protocol.js';
-import { executeCommand, initActionPolicy } from './actions.js';
+import { executeCommand, initActionPolicy } from './actions/actions.js';
 import { executeIOSCommand } from './ios-actions.js';
 import { StreamServer } from './stream-server.js';
 import {
@@ -198,21 +198,32 @@ function getPortForSession(session: string): number {
 
 /**
  * Get the base directory for socket/pid files.
- * Priority: AGENT_BROWSER_SOCKET_DIR > XDG_RUNTIME_DIR > ~/.agent-browser > tmpdir
+ * Priority: AGENT_BROWSER_DATA_DIR > AGENT_BROWSER_SOCKET_DIR > XDG_RUNTIME_DIR > project/profiles > ~/.agent-browser
  */
 export function getAppDir(): string {
-  // 1. XDG_RUNTIME_DIR (Linux standard)
+  // 1. Explicit data dir override
+  if (process.env.AGENT_BROWSER_DATA_DIR) {
+    return process.env.AGENT_BROWSER_DATA_DIR;
+  }
+
+  // 2. XDG_RUNTIME_DIR (Linux standard)
   if (process.env.XDG_RUNTIME_DIR) {
     return path.join(process.env.XDG_RUNTIME_DIR, 'agent-browser');
   }
 
-  // 2. Home directory fallback (like Docker Desktop's ~/.docker/run/)
+  // 3. Project profiles directory (Preferred for this workspace)
+  const projectProfiles = 'D:\\Developments\\tslib\\agentai\\profiles';
+  if (fs.existsSync(path.dirname(projectProfiles))) {
+    return projectProfiles;
+  }
+
+  // 4. Home directory fallback
   const homeDir = os.homedir();
   if (homeDir) {
     return path.join(homeDir, '.agent-browser');
   }
 
-  // 3. Last resort: temp dir
+  // 5. Last resort: temp dir
   return path.join(os.tmpdir(), 'agent-browser');
 }
 
@@ -383,7 +394,10 @@ export async function startDaemon(options?: {
           const parseResult = parseCommand(line);
 
           if (!parseResult.success) {
-            const resp = errorResponse(parseResult.id ?? 'unknown', parseResult.error);
+            const resp = errorResponse(
+              (parseResult as any).id ?? 'unknown',
+              (parseResult as any).error
+            );
             await safeWrite(socket, serializeResponse(resp) + '\n');
             continue;
           }

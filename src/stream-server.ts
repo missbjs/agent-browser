@@ -1,6 +1,6 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import type { BrowserManager, ScreencastFrame } from './browser.js';
-import { setScreencastFrameCallback } from './actions.js';
+import { setScreencastFrameCallback } from './actions/actions.js';
 
 /**
  * Check whether a WebSocket connection origin should be allowed.

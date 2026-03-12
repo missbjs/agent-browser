@@ -16,9 +16,21 @@ import {
 
 /**
  * Get the session persistence directory.
- * Located at ~/.agent-browser/sessions/
+ * Priority: AGENT_BROWSER_DATA_DIR > project/profiles/sessions > ~/.agent-browser/sessions
  */
 export function getSessionsDir(): string {
+  // 1. Explicit data dir override
+  if (process.env.AGENT_BROWSER_DATA_DIR) {
+    return path.join(process.env.AGENT_BROWSER_DATA_DIR, 'sessions');
+  }
+
+  // 2. Project profiles directory
+  const projectProfiles = 'D:\\Developments\\tslib\\agentai\\profiles';
+  if (fs.existsSync(path.dirname(projectProfiles))) {
+    return path.join(projectProfiles, 'sessions');
+  }
+
+  // 3. Fallback to home directory
   return path.join(os.homedir(), '.agent-browser', 'sessions');
 }
 

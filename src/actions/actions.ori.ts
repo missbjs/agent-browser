@@ -1,9 +1,9 @@
-import * as fs from 'fs';
+﻿import * as fs from 'fs';
 import * as path from 'path';
 import type { Page, Frame } from 'playwright-core';
 import { mkdirSync } from 'node:fs';
-import type { BrowserManager, ScreencastFrame } from './browser.js';
-import { getAppDir } from './daemon.js';
+import type { BrowserManager, ScreencastFrame } from './browser';
+import { getAppDir } from './daemon';
 import {
   type ActionPolicy,
   checkPolicy,
@@ -12,9 +12,9 @@ import {
   loadPolicyFile,
   initPolicyReloader,
   reloadPolicyIfChanged,
-} from './action-policy.js';
-import { requestConfirmation, getAndRemovePending } from './confirmation.js';
-import { getAuthProfile, updateLastLogin } from './auth-vault.js';
+} from './action-policy';
+import { requestConfirmation, getAndRemovePending } from './confirmation';
+import { getAuthProfile, updateLastLogin } from './auth-vault';
 import {
   getSessionsDir,
   readStateFile,
@@ -22,7 +22,7 @@ import {
   isEncryptedPayload,
   listStateFiles,
   cleanupExpiredStates,
-} from './state-utils.js';
+} from './state-utils';
 import type {
   Command,
   Response,
@@ -164,10 +164,10 @@ import type {
   RecordingRestartData,
   InputEventData,
   StylesData,
-} from './types.js';
-import { successResponse, errorResponse, parseCommand } from './protocol.js';
-import { diffSnapshots, diffScreenshots } from './diff.js';
-import { getEnhancedSnapshot } from './snapshot.js';
+} from './types';
+import { successResponse, errorResponse, parseCommand } from './protocol';
+import { diffSnapshots, diffScreenshots } from './diff';
+import { getEnhancedSnapshot } from './snapshot';
 
 // Callback for screencast frames - will be set by the daemon when streaming is active
 let screencastFrameCallback: ((frame: ScreencastFrame) => void) | null = null;

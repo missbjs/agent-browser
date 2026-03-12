@@ -1876,6 +1876,28 @@ export class BrowserManager {
   }
 
   /**
+   * Switch to a tab matching the given URL prefix.
+   * Optionally limited to a specific window (context) index.
+   */
+  async switchToUrl(
+    urlPrefix: string,
+    windowIndex?: number
+  ): Promise<{ index: number; url: string; title: string }> {
+    const tabs = await this.listTabs(windowIndex);
+    const targetTab = tabs.find((t) => t.url.startsWith(urlPrefix));
+
+    if (!targetTab) {
+      throw new Error(
+        `No tab found starting with URL: ${urlPrefix}${
+          windowIndex !== undefined ? ` in window ${windowIndex}` : ''
+        }`
+      );
+    }
+
+    return await this.switchTo(targetTab.index);
+  }
+
+  /**
    * Close a specific tab/page
    */
   async closeTab(index?: number): Promise<{ closed: number; remaining: number }> {

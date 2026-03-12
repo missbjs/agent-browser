@@ -129,6 +129,8 @@ Options:
   --session <name>  Use a specific browser session (default: "default")
   --headed          Start the browser in headed mode (visible window)
   --profile <path>  Path to a persistent browser profile directory
+  --tab-url <prefix> Target a specific tab starting with this URL
+  --window <index>   Target a specific window (context) index
   --help, -h        Show this help message
 
 Basic Actions:
@@ -161,13 +163,15 @@ Storage Actions:
 
 async function main() {
   const args = process.argv.slice(2);
-  let session = 'default';
+  let session = process.env.AGENT_BROWSER_SESSION || 'default';
   let headless = true;
   let headed = false;
   let profile: string | undefined;
+  let modifierWindowIndex: number | undefined = undefined;
 
   // Simple arg parser
   const cleanArgs: string[] = [];
+  let tabUrl: string | undefined = undefined;
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--session' && args[i + 1]) {
       session = args[i + 1];
@@ -177,6 +181,12 @@ async function main() {
       headed = true;
     } else if (args[i] === '--profile' && args[i + 1]) {
       profile = args[i + 1];
+      i++;
+    } else if (args[i] === '--tab-url' && args[i + 1]) {
+      tabUrl = args[i + 1];
+      i++;
+    } else if (args[i] === '--window' && args[i + 1]) {
+      modifierWindowIndex = parseInt(args[i + 1], 10);
       i++;
     } else if (args[i] === '--help' || args[i] === '-h') {
       showHelp();
@@ -195,7 +205,6 @@ async function main() {
   // Handle multi-word actions and modifiers like "window 0 tab list"
   let finalAction = action;
   let remainingArgs = cleanArgs.slice(1);
-  let modifierWindowIndex: number | undefined = undefined;
 
   const multiWordActions = [
     'session',
@@ -211,6 +220,7 @@ async function main() {
     'video',
     'auth',
     'screencast',
+    'get',
   ];
 
   if (
@@ -229,14 +239,6 @@ async function main() {
     // Multi-word sub-actions like "tab new" -> "tab_new"
     finalAction = `${action}_${remainingArgs[0]}`;
     remainingArgs = remainingArgs.slice(1);
-  }
-
-  // Check for --window flag in remaining args
-  const windowFlagIdx = remainingArgs.indexOf('--window');
-  if (windowFlagIdx !== -1 && remainingArgs[windowFlagIdx + 1]) {
-    modifierWindowIndex = parseInt(remainingArgs[windowFlagIdx + 1], 10);
-    // Note: we don't slice it out here to avoid messing up index-based remainingArgs,
-    // but we'll use it in command construction.
   }
 
   // Auto-start daemon if needed
@@ -302,10 +304,15 @@ async function main() {
     return;
   }
 
-  const command: any = { action: finalAction };
+  let command: any = { action: finalAction };
   if (modifierWindowIndex !== undefined) command.windowIndex = modifierWindowIndex;
+  if (tabUrl !== undefined) command.tabUrl = tabUrl;
 
   // Normalize actions
+  if (command.action === 'get_url') command.action = 'url';
+  if (command.action === 'get_title') command.action = 'title';
+  if (command.action === 'get_snapshot') command.action = 'snapshot';
+
   if (action === 'launch' || action === 'open') {
     command.action = 'launch';
     command.headless = headless;
@@ -332,6 +339,89 @@ async function main() {
     // General arg mapping
     if (action === 'navigate' && remainingArgs[0]) command.url = remainingArgs[0];
     if (action === 'screenshot' && remainingArgs[0]) command.path = remainingArgs[0];
+    if (action === 'download' && remainingArgs[0]) {
+      command.selector = remainingArgs[0];
+      command.path = remainingArgs[1] || '';
+    }
+    if (action === 'click' && remainingArgs[0]) command.selector = remainingArgs[0];
+    if (action === 'dblclick' && remainingArgs[0]) command.selector = remainingArgs[0];
+    if (action === 'focus' && remainingArgs[0]) command.selector = remainingArgs[0];
+    if (action === 'check' && remainingArgs[0]) command.selector = remainingArgs[0];
+    if (action === 'uncheck' && remainingArgs[0]) command.selector = remainingArgs[0];
+    if (action === 'fill' && remainingArgs[0]) {
+      command.selector = remainingArgs[0];
+      command.value = remainingArgs[1] || '';
+    }
+    if (action === 'upload' && remainingArgs[0]) {
+      command.selector = remainingArgs[0];
+      command.files = remainingArgs.slice(1);
+    }
+    // Enable dragdrop for testing
+    if (action === 'dragdrop' && remainingArgs[0]) {
+      command.target = remainingArgs[0];
+      command.files = remainingArgs.slice(1);
+    }
+    if (action === 'press' && remainingArgs[0]) command.key = remainingArgs[0];
+    if (action === 'wait' && remainingArgs[0]) {
+      if (isNaN(parseInt(remainingArgs[0], 10))) {
+        command.selector = remainingArgs[0];
+      } else {
+        command.timeout = parseInt(remainingArgs[0], 10);
+      }
+    }
+    if (action === 'scroll' && remainingArgs[0]) {
+      if (remainingArgs[0] === 'up' || remainingArgs[0] === 'down') {
+        command.direction = remainingArgs[0];
+      } else {
+        command.selector = remainingArgs[0];
+      }
+    }
+    if (action === 'eval' && remainingArgs[0]) {
+      command.action = 'evaluate';
+      command.script = remainingArgs[0];
+    }
+    if (action === 'dispatch' && remainingArgs[0]) {
+      command.selector = remainingArgs[0];
+      command.event = remainingArgs[1] || 'click';
+    }
+    if (action.startsWith('getby') && remainingArgs[0]) {
+      command.action = action;
+      command.name = remainingArgs[0];
+      command.subaction = remainingArgs[1] || 'click';
+      if (action === 'getbyrole') {
+        command.role = remainingArgs[0];
+        command.name = remainingArgs[1];
+        command.subaction = remainingArgs[2] || 'click';
+      }
+    }
+
+    // New switch for press, keyboard, and type actions
+    switch (action) {
+      case 'press':
+        const pressKeys = remainingArgs.join('+');
+        command = { action: 'press', key: pressKeys };
+        break;
+      case 'keyboard':
+        command = {
+          action: 'keyboard',
+          subaction: remainingArgs[0],
+          text: remainingArgs.slice(1).join(' '),
+        };
+        break;
+      case 'type':
+        // Check if we have two arguments (selector and text) or just one (text for focused element)
+        if (remainingArgs.length >= 2 && remainingArgs[0].startsWith('e')) {
+          // Assuming 'e' prefix for selector
+          command = {
+            action: 'type',
+            selector: remainingArgs[0],
+            text: remainingArgs.slice(1).join(' '),
+          };
+        } else {
+          command = { action: 'keyboard', subaction: 'type', text: remainingArgs.join(' ') };
+        }
+        break;
+    }
 
     // Tab mappings
     if (finalAction === 'tab_new' && remainingArgs[0]) command.url = remainingArgs[0];
@@ -356,16 +446,14 @@ async function main() {
 
   try {
     const response = await sendCommand(session, command);
-    if (response.error) {
-      console.error('Error:', response.error);
+    if (!response.success) {
+      console.error('Error:', response.error || 'Unknown error');
       process.exit(1);
     } else {
-      if (action === 'snapshot') {
-        console.log(response.result?.snapshot || response.result);
-      } else if (response.message) {
+      if (response.message && !response.data) {
         console.log(response.message);
       } else {
-        console.log(JSON.stringify(response.result || response, null, 2));
+        console.log(JSON.stringify(response, null, 2));
       }
     }
   } catch (err: any) {

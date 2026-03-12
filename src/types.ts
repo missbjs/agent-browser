@@ -4,6 +4,8 @@ import type { Page, Browser, BrowserContext } from 'playwright-core';
 export interface BaseCommand {
   id: string;
   action: string;
+  windowIndex?: number;
+  tabUrl?: string;
 }
 
 // Action-specific command types
@@ -102,6 +104,12 @@ export interface DragCommand extends BaseCommand {
   target: string;
 }
 
+export interface DragDropCommand extends BaseCommand {
+  action: 'dragdrop';
+  target: string;
+  files: string | string[];
+}
+
 export interface FrameCommand extends BaseCommand {
   action: 'frame';
   selector?: string;
@@ -185,6 +193,7 @@ export interface StorageSetCommand extends BaseCommand {
 export interface StorageClearCommand extends BaseCommand {
   action: 'storage_clear';
   type: 'local' | 'session';
+  key: string;
 }
 
 export interface DialogCommand extends BaseCommand {
@@ -614,6 +623,7 @@ export interface ProfilerStopCommand extends BaseCommand {
 // HAR recording
 export interface HarStartCommand extends BaseCommand {
   action: 'har_start';
+  url?: string;
 }
 
 export interface HarStopCommand extends BaseCommand {
@@ -905,6 +915,7 @@ export type Command =
   | CheckCommand
   | UncheckCommand
   | UploadCommand
+  | DragDropCommand
   | DoubleClickCommand
   | FocusCommand
   | DragCommand

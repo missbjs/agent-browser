@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, vi } from 'vitest';
 import { BrowserManager, getDefaultTimeout } from './browser.js';
-import { executeCommand } from './actions.js';
+import { executeCommand } from './actions/actions.js';
 import { chromium } from 'playwright-core';
 
 describe('BrowserManager', () => {

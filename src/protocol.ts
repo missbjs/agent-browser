@@ -5,6 +5,8 @@ import type { Command, Response } from './types.js';
 const baseCommandSchema = z.object({
   id: z.string(),
   action: z.string(),
+  windowIndex: z.number().optional(),
+  tabUrl: z.string().optional(),
 });
 
 // Individual action schemas
@@ -118,6 +120,12 @@ const dragSchema = baseCommandSchema.extend({
   action: z.literal('drag'),
   source: z.string().min(1),
   target: z.string().min(1),
+});
+
+const dragDropSchema = baseCommandSchema.extend({
+  action: z.literal('dragdrop'),
+  target: z.string().min(1),
+  files: z.union([z.string(), z.array(z.string())]),
 });
 
 const frameSchema = baseCommandSchema.extend({
@@ -942,6 +950,7 @@ const commandSchema = z.discriminatedUnion('action', [
   dblclickSchema,
   focusSchema,
   dragSchema,
+  dragDropSchema,
   frameSchema,
   mainframeSchema,
   getByRoleSchema,
