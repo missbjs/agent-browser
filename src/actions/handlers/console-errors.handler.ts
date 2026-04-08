@@ -6,16 +6,26 @@ export async function handleConsole(
   command: ConsoleCommand,
   browser: BrowserManager
 ): Promise<Response> {
+  if (command.clear) {
+    browser.clearConsoleMessages();
+    return successResponse(command.id, { cleared: true });
+  }
+
   const page = browser.getPage();
-  // Get console messages from the page
-  return successResponse(command.id, { messages: [] });
+  const messages = browser.getConsoleMessages();
+  return successResponse(command.id, { messages, origin: page.url() });
 }
 
 export async function handleErrors(
   command: ErrorsCommand,
   browser: BrowserManager
 ): Promise<Response> {
+  if (command.clear) {
+    browser.clearPageErrors();
+    return successResponse(command.id, { cleared: true });
+  }
+
   const page = browser.getPage();
-  // Get error messages from the page
-  return successResponse(command.id, { errors: [] });
+  const errors = browser.getPageErrors();
+  return successResponse(command.id, { errors, origin: page.url() });
 }

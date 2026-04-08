@@ -133,31 +133,204 @@ Options:
   --window <index>   Target a specific window (context) index
   --help, -h        Show this help message
 
-Basic Actions:
-  launch [url]      Launch a new browser session (and navigate to URL)
-  open [url]        Same as launch
-  navigate <url>    Navigate the active tab to a URL
-  snapshot          Get an accessibility tree snapshot of the current page
-  screenshot <path> Save a screenshot of the current page
-  close             Close the current session and daemon
-  stop              Same as close
+Quick Start:
+  open <url>              Navigate to URL
+  snapshot                Get page accessibility tree with refs
+  click @e1               Click element by ref
+  fill @e2 "text"         Fill input by ref
+  screenshot [path]       Take screenshot
+  close                   Close browser session
 
-Tab Management:
-  tab list          List all tabs in the current window
-  tab new [url]     Open a new tab
-  tab switch <idx>  Switch to tab at index
-  tab close <idx>   Close tab at index
+### Core Commands
 
-Window Management:
-  window list       List all open windows
-  window <id> tab <action>  Perform tab actions on a specific window
+  open <url>              Navigate to URL (aliases: goto, navigate)
+  click <sel>             Click element (--new-tab to open in new tab)
+  dblclick <sel>          Double-click element
+  focus <sel>             Focus element
+  type <sel> <text>       Type into element
+  fill <sel> <text>       Clear and fill
+  press <key>             Press key (Enter, Tab, Control+a) (alias: key)
+  keyboard type <text>    Type with real keystrokes (no selector, current focus)
+  keyboard inserttext <text>  Insert text without key events (no selector)
+  keydown <key>           Hold key down
+  keyup <key>             Release key
+  hover <sel>             Hover element
+  select <sel> <val>      Select dropdown option
+  check <sel>             Check checkbox
+  uncheck <sel>           Uncheck checkbox
+  scroll <dir> [px]       Scroll (up/down/left/right, --selector <sel>)
+  scrollintoview <sel>    Scroll element into view (alias: scrollinto)
+  drag <src> <tgt>        Drag and drop
+  upload <sel> <files>    Upload files
+  screenshot [path]       Take screenshot (--full for full page, saves to a temporary directory if no path)
+  screenshot --annotate   Annotated screenshot with numbered element labels
+  pdf <path>              Save as PDF
+  snapshot                Accessibility tree with refs (best for AI)
+  eval <js>               Run JavaScript (-b for base64, --stdin for piped input)
+  connect <port>          Connect to browser via CDP
+  close                   Close browser (aliases: quit, exit)
 
-Session Management:
-  session list      List all active background sessions
+### Get Info
 
-Storage Actions:
-  storage get <type> [key]      Get localStorage or sessionStorage (type: local|session)
-  storage clear <type> [key]    Clear storage items
+  get text <sel>          Get text content
+  get html <sel>          Get innerHTML
+  get value <sel>         Get input value
+  get attr <sel> <attr>   Get attribute
+  get title               Get page title
+  get url                 Get current URL
+  get count <sel>         Count matching elements
+  get box <sel>           Get bounding box
+  get styles <sel>        Get computed styles
+
+### Check State
+
+  is visible <sel>        Check if visible
+  is enabled <sel>        Check if enabled
+  is checked <sel>        Check if checked
+
+### Find Elements (Semantic Locators)
+
+  find role <role> <action> [value]       By ARIA role
+  find text <text> <action>               By text content
+  find label <label> <action> [value]     By label
+  find placeholder <ph> <action> [value]  By placeholder
+  find alt <text> <action>                By alt text
+  find title <text> <action>              By title attr
+  find testid <id> <action> [value]       By data-testid
+  find first <sel> <action> [value]       First match
+  find last <sel> <action> [value]        Last match
+  find nth <n> <sel> <action> [value]     Nth match
+
+**Actions:** click, fill, type, hover, focus, check, uncheck, text
+
+**Options:** --name <name> (filter role by accessible name), --exact (require exact text match)
+
+### Wait
+
+  wait <selector>         Wait for element to be visible
+  wait <ms>               Wait for time (milliseconds)
+  wait --text "Welcome"   Wait for text to appear
+  wait --url "**/dash"    Wait for URL pattern
+  wait --load networkidle Wait for load state
+  wait --fn "window.ready === true"  Wait for JS condition
+
+**Load states:** load, domcontentloaded, networkidle
+
+### Mouse Control
+
+  mouse move <x> <y>      Move mouse
+  mouse down [button]     Press button (left/right/middle)
+  mouse up [button]       Release button
+  mouse wheel <dy> [dx]   Scroll wheel
+
+### Browser Settings
+
+  set viewport <w> <h>    Set viewport size
+  set device <name>       Emulate device ("iPhone 14")
+  set geo <lat> <lng>     Set geolocation
+  set offline [on|off]    Toggle offline mode
+  set headers <json>      Extra HTTP headers
+  set credentials <u> <p> HTTP basic auth
+  set media [dark|light]  Emulate color scheme
+
+### Cookies & Storage
+
+  cookies                 Get all cookies
+  cookies set <name> <val> Set cookie
+  cookies clear           Clear cookies
+
+  storage local           Get all localStorage
+  storage local <key>     Get specific key
+  storage local set <k> <v>  Set value
+  storage local clear     Clear all
+
+  storage session         Same for sessionStorage
+
+### Network
+
+  network route <url>              Intercept requests
+  network route <url> --abort      Block requests
+  network route <url> --body <json>  Mock response
+  network unroute [url]            Remove routes
+  network requests                 View tracked requests
+  network requests --filter api    Filter requests
+
+### Tabs & Windows
+
+  tab                     List tabs
+  tab new [url]           New tab (optionally with URL)
+  tab <n>                 Switch to tab n
+  tab close [n]           Close tab
+  window new              New window
+
+### Frames
+
+  frame <sel>             Switch to iframe
+  frame main              Back to main frame
+
+### Dialogs
+
+  dialog accept [text]    Accept (with optional prompt text)
+  dialog dismiss          Dismiss
+
+### Diff
+
+  diff snapshot                              Compare current vs last snapshot
+  diff snapshot --baseline before.txt        Compare current vs saved snapshot file
+  diff snapshot --selector "#main" --compact Scoped snapshot diff
+  diff screenshot --baseline before.png      Visual pixel diff against baseline
+  diff screenshot --baseline b.png -o d.png  Save diff image to custom path
+  diff screenshot --baseline b.png -t 0.2    Adjust color threshold (0-1)
+  diff url https://v1.com https://v2.com     Compare two URLs (snapshot diff)
+  diff url https://v1.com https://v2.com --screenshot  Also visual diff
+  diff url https://v1.com https://v2.com --wait-until networkidle  Custom wait strategy
+  diff url https://v1.com https://v2.com --selector "#main"  Scope to element
+
+### Debug
+
+  trace start [path]      Start recording trace
+  trace stop [path]       Stop and save trace
+  profiler start          Start Chrome DevTools profiling
+  profiler stop [path]    Stop and save profile (.json)
+  console                 View console messages (log, error, warn, info)
+  console --clear         Clear console
+  errors                  View page errors (uncaught JavaScript exceptions)
+  errors --clear          Clear errors
+  highlight <sel>         Highlight element
+  state save <path>       Save auth state
+  state load <path>       Load auth state
+  state list              List saved state files
+  state show <file>       Show state summary
+  state rename <old> <new> Rename state file
+  state clear [name]      Clear states for session
+  state clear --all       Clear all saved states
+  state clean --older-than <days>  Delete old states
+
+### Navigation
+
+  back                    Go back
+  forward                 Go forward
+  reload                  Reload page
+
+### Setup
+
+  install                 Download Chromium browser
+  install --with-deps     Also install system deps (Linux)
+
+### Sessions
+
+Run multiple isolated browser instances:
+
+  --session <name>        Use isolated session (or AGENT_BROWSER_SESSION env)
+  --session-name <name>   Auto-save/restore session state (or AGENT_BROWSER_SESSION_NAME env)
+  --profile <path>        Persistent browser profile directory (or AGENT_BROWSER_PROFILE env)
+  --state <path>          Load storage state from JSON file (or AGENT_BROWSER_STATE env)
+
+Each session has its own:
+- Browser instance
+- Cookies and storage
+- Navigation history
+- Authentication state
 `);
 }
 
@@ -172,6 +345,9 @@ async function main() {
   // Simple arg parser
   const cleanArgs: string[] = [];
   let tabUrl: string | undefined = undefined;
+  let evalBase64Value: string | undefined = undefined;
+  let evalStdin = false;
+  let stdinScript: string | undefined = undefined;
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--session' && args[i + 1]) {
       session = args[i + 1];
@@ -191,9 +367,21 @@ async function main() {
     } else if (args[i] === '--help' || args[i] === '-h') {
       showHelp();
       return;
+    } else if (args[i] === '-b' && args[i + 1]) {
+      // Base64 encoded script for eval - capture the value and skip both
+      evalBase64Value = args[i + 1];
+      i++;
+    } else if (args[i] === '--stdin') {
+      // Read script from stdin
+      evalStdin = true;
     } else {
       cleanArgs.push(args[i]);
     }
+  }
+
+  // Read stdin if --stdin flag was provided
+  if (evalStdin) {
+    stdinScript = fs.readFileSync(0, 'utf-8').trim();
   }
 
   const action = cleanArgs[0];
@@ -376,9 +564,18 @@ async function main() {
         command.selector = remainingArgs[0];
       }
     }
-    if (action === 'eval' && remainingArgs[0]) {
+    if (action === 'eval') {
       command.action = 'evaluate';
-      command.script = remainingArgs[0];
+
+      // Handle base64 encoded script
+      if (evalBase64Value) {
+        command.script = Buffer.from(evalBase64Value, 'base64').toString('utf-8');
+      } else if (evalStdin && stdinScript) {
+        // Use script read from stdin
+        command.script = stdinScript;
+      } else if (remainingArgs[0]) {
+        command.script = remainingArgs[0];
+      }
     }
     if (action === 'dispatch' && remainingArgs[0]) {
       command.selector = remainingArgs[0];
